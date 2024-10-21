@@ -45,7 +45,8 @@ def _get_protein_sequences(record: SeqRecord) -> List[DigitalSequence]:
 def _assign_pfam_family(queries: List[DigitalSequence],
                         profiles: List[OptimizedProfile],
                         cpus: int,
-                        E: float) -> Generator[Tuple[str, str, str], None, None]:
+                        E: float,
+                        verbose: bool) -> Generator[Tuple[str, str, str], None, None]:
     '''...
     
     Args:
@@ -57,7 +58,7 @@ def _assign_pfam_family(queries: List[DigitalSequence],
         Tuple[str, str, str]: ...
     '''
     for hits in tqdm(hmmscan(queries, profiles, cpus=cpus, E=E),
-                     total=len(queries)):
+                     total=len(queries), disable=not verbose):
         query_name = hits.query_name.decode()
 
         if hits:
@@ -69,7 +70,7 @@ def _assign_pfam_family(queries: List[DigitalSequence],
             yield query_name, 'PFAM_UNK', ''
 
 
-def run(src: os.PathLike, dst: os.PathLike, cpus: int, E: float) -> None:
+def run(src: os.PathLike, dst: os.PathLike, cpus: int, E: float, verbose: bool = True) -> None:
     '''...
 
     Args:
@@ -93,5 +94,5 @@ def run(src: os.PathLike, dst: os.PathLike, cpus: int, E: float) -> None:
             writer = csv.writer(file, delimiter='\t', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(('locus_tag', 'pfam_acc', 'pfam_desc'))
 
-            for hit in _assign_pfam_family(queries, profiles, cpus, E):
+            for hit in _assign_pfam_family(queries, profiles, cpus, E, verbose=verbose):
                 writer.writerow(hit)

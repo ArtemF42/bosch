@@ -25,10 +25,19 @@ def _get_protein_sequences(record: SeqRecord) -> List[DigitalSequence]:
     protein_sequences = []
 
     for feature in record.features:
-        if feature.type == 'CDS' and 'translation' in feature.qualifiers:
-            seq = TextSequence(name=feature.qualifiers['locus_tag'][0].encode(),
-                               sequence=feature.qualifiers['translation'][0])
-            protein_sequences.append(seq.digitize(alphabet=alphabet))
+        if feature.type == 'CDS':
+            if 'translation' in feature.qualifiers:
+                if 'locus_tag' in feature.qualifiers:
+                    seq_name = feature.qualifiers['locus_tag'][0]
+                elif 'gene' in feature.qualifiers:
+                    seq_name = feature.qualifiers['gene'][0]
+                else:
+                    continue
+
+                seq = feature.qualifiers['translation'][0]
+                seq = TextSequence(name=seq_name.encode(), sequence=seq)
+                
+                protein_sequences.append(seq.digitize(alphabet=alphabet))
     
     return protein_sequences
 
